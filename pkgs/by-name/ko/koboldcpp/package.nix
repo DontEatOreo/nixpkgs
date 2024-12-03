@@ -3,7 +3,7 @@
   fetchFromGitHub,
   stdenv,
   makeWrapper,
-  gitUpdater,
+  makeFontsConf,
   python3Packages,
   tk,
   addDriverRunpath,
@@ -94,6 +94,8 @@ effectiveStdenv.mkDerivation (finalAttrs: {
     runHook preInstall
 
     mkdir -p "$out/bin"
+    mkdir -p "$out/share/fonts/truetype/Roboto"
+    mkdir -p "$out/share/fonts/opentype"
 
     install -Dm755 koboldcpp.py "$out/bin/koboldcpp.unwrapped"
     cp *.so "$out/bin"
@@ -108,13 +110,21 @@ effectiveStdenv.mkDerivation (finalAttrs: {
       rm "$out/bin/klite.embd"
     ''}
 
+    cp ${python3Packages.customtkinter}/lib/python*/site-packages/customtkinter/assets/fonts/Roboto/*.ttf "$out/share/fonts/truetype/Roboto"
+    cp ${python3Packages.customtkinter}/lib/python*/site-packages/customtkinter/assets/fonts/*.otf "$out/share/fonts/opentype"
+
     runHook postInstall
   '';
 
   postFixup = ''
     wrapPythonProgramsIn "$out/bin" "$pythonPath"
     makeWrapper "$out/bin/koboldcpp.unwrapped" "$out/bin/koboldcpp" \
-      --prefix PATH : ${lib.makeBinPath [ tk ]} ${libraryPathWrapperArgs}
+      --prefix PATH : ${lib.makeBinPath [ tk ]} ${libraryPathWrapperArgs} \
+      --set FONTCONFIG_FILE ${
+        makeFontsConf {
+          fontDirectories = [ "$out/share/fonts" ];
+        }
+      }
   '';
 
   passthru.updateScript = nix-update-script { };
