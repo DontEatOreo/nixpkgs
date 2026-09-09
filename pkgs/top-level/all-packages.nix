@@ -5365,6 +5365,12 @@ with pkgs;
 
   acl = callPackage ../development/libraries/acl { };
 
+  inherit (callPackages ../development/libraries/alibabacloud-oss-cpp-sdk { })
+    alibabacloud-oss-cpp-sdk_1_10
+    ;
+
+  alibabacloud-oss-cpp-sdk = alibabacloud-oss-cpp-sdk_1_10;
+
   allegro = allegro4;
   allegro4 = callPackage ../development/libraries/allegro { };
   allegro5 = callPackage ../development/libraries/allegro/5.nix { };
