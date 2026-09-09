@@ -29,6 +29,10 @@
   withWebKit ? true,
   withEGL ? true,
   withPrivateFonts ? false,
+  withDebug ? true,
+  withVisibility ? true,
+  # Some applications use internal APIs omitted by make install
+  withPrivateHeaders ? false,
   webkitgtk_4_1,
 }:
 
@@ -101,7 +105,9 @@ stdenv.mkDerivation (finalAttrs: {
   ++ lib.optionals withWebKit [
     "--enable-webview"
     "--enable-webviewwebkit"
-  ];
+  ]
+  ++ lib.optional (!withDebug) "--enable-debug=no"
+  ++ lib.optional (!withVisibility) "--disable-visibility";
 
   env = lib.optionalAttrs (!stdenv.hostPlatform.isDarwin) {
     SEARCH_LIB = toString [
@@ -110,11 +116,15 @@ stdenv.mkDerivation (finalAttrs: {
     ];
   };
 
-  postInstall = "
+  postInstall =
+    "
     pushd $out/include
     ln -s wx-*/* .
     popd
-  ";
+  "
+    + lib.optionalString withPrivateHeaders ''
+      cp -r include/wx/private "$out/include/wx-${lib.versions.majorMinor finalAttrs.version}/wx/"
+    '';
 
   enableParallelBuilding = true;
 
@@ -124,6 +134,9 @@ stdenv.mkDerivation (finalAttrs: {
       compat32
       withEGL
       withPrivateFonts
+      withDebug
+      withVisibility
+      withPrivateHeaders
       ;
   };
 
