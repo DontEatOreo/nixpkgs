@@ -4,6 +4,9 @@
   curl,
   expat,
   fetchFromGitHub,
+  genericUpdater,
+  writeShellApplication,
+  gh,
   gspell,
   gst_all_1,
   gtk3,
@@ -129,6 +132,23 @@ stdenv.mkDerivation (finalAttrs: {
   enableParallelBuilding = true;
 
   passthru = {
+    updateScript =
+      genericUpdater {
+        attrPath = "wxwidgets_3_3";
+        # Hotfix tags are not always accompanied by GitHub releases
+        versionLister = lib.getExe (writeShellApplication {
+          name = "list-wxwidgets-tags";
+          runtimeInputs = [ gh ];
+          text = ''
+            gh api --paginate repos/wxWidgets/wxWidgets/tags --jq '.[].name'
+          '';
+        });
+        rev-prefix = "v";
+        allowedVersions = "^3\\.3\\.[0-9]+(\\.[0-9]+)?$";
+      }
+      // {
+        attrPath = "wxwidgets_3_3";
+      };
     inherit
       compat30
       compat32
