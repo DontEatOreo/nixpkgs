@@ -1,0 +1,104 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH] cmake: reuse separately built internal libraries
+
+Route library subdirectories through the packaging helper so later stages can
+import cached targets and preserve their original CMake link interfaces.
+---
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index fa3b308e5f490fdfa3b98f519fa7b33788da2981..67a379185950d950519cf24038fc0c570a0218fa 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1019,7 +1019,9 @@ function(crealityprint_copy_dlls target config postfix output_dlls)
+ endfunction()
+ 
+ # libslic3r, CrealityPrint GUI and the CrealityPrint executable.
++include(cmake/CrealityComponents.cmake)
+ add_subdirectory(src)
++creality_export_components()
+ 
+ set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${STARTUP_PROJECT_NAME})
+ add_dependencies(gettext_make_pot hintsToPot)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 46c9b6e1dbd98c5a194a4f8d5cda25bef9e9827e..72439bb0b36ff1ea45ca2402c7c76850c54b2e3f 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -1,30 +1,30 @@
+ cmake_minimum_required(VERSION 3.13)
+ # project(CrealityPrint-native)
+ 
+-add_subdirectory(build-utils)
+-add_subdirectory(admesh)
+-# add_subdirectory(avrdude)
++creality_add_subdirectory(build-utils)
++creality_add_subdirectory(admesh)
++# creality_add_subdirectory(avrdude)
+ # boost/nowide
+-add_subdirectory(boost)
+-add_subdirectory(clipper)
+-add_subdirectory(clipper2)
+-add_subdirectory(miniz)
+-add_subdirectory(minilzo)
+-add_subdirectory(glu-libtess)
+-add_subdirectory(qhull)
+-add_subdirectory(Shiny)
+-add_subdirectory(semver)
+-add_subdirectory(libigl)
+-add_subdirectory(hints)
+-add_subdirectory(mcut)
+-add_subdirectory(qoi)
++creality_add_subdirectory(boost)
++creality_add_subdirectory(clipper)
++creality_add_subdirectory(clipper2)
++creality_add_subdirectory(miniz)
++creality_add_subdirectory(minilzo)
++creality_add_subdirectory(glu-libtess)
++creality_add_subdirectory(qhull)
++creality_add_subdirectory(Shiny)
++creality_add_subdirectory(semver)
++creality_add_subdirectory(libigl)
++creality_add_subdirectory(hints)
++creality_add_subdirectory(mcut)
++creality_add_subdirectory(qoi)
+ option(ENABLE_WEBRTC_VIDEO "Build the metartc WebRTC camera backend" OFF)
+ if(ENABLE_WEBRTC_VIDEO)
+     add_definitions(-DENABLE_WEBRTC_VIDEO)
+ endif()
+-add_subdirectory(video)
++creality_add_subdirectory(video)
+ # Adding libnest2d project for bin packing...
+-add_subdirectory(libnest2d)
++creality_add_subdirectory(libnest2d)
+ #_VLD_ENABLED 
+ set(CGAL_ENABLE_VLD 0)
+ if(CMAKE_VLD_ENABLED)
+@@ -37,13 +37,13 @@ endif()
+ message(STATUS "Before CGAL_ENABLE_VLD=${CGAL_ENABLE_VLD}")
+ message("bbbbSLIC3R_APP_NAME=${SLIC3R_APP_NAME}")
+ find_package(libnoise REQUIRED)
+-add_subdirectory(libslic3r)
++creality_add_subdirectory(libslic3r)
+ 
+ if (SLIC3R_GUI)
+-    add_subdirectory(glad)
+-    add_subdirectory(imgui)
+-    add_subdirectory(imguizmo)
+-    add_subdirectory(hidapi)
++    creality_add_subdirectory(glad)
++    creality_add_subdirectory(imgui)
++    creality_add_subdirectory(imguizmo)
++    creality_add_subdirectory(hidapi)
+     include_directories(hidapi/include)
+ 
+     if(WIN32)
+@@ -150,7 +150,7 @@ if (SLIC3R_GUI)
+ #    list(REMOVE_ITEM wxWidgets_LIBRARIES oleacc)
+     message(STATUS "wx libs: ${wxWidgets_LIBRARIES}")
+ 
+-    add_subdirectory(slic3r)
++    creality_add_subdirectory(slic3r)
+ endif()
+ 
+ if(ORCA_TOOLS)

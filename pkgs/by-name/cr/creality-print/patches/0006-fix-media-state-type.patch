@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH 06/10] wxMediaCtrl2: use an integer for the buffering state
+
+The buffering state is 6, outside the range of wxMediaState. Clang rejects this
+enum conversion in a constant expression. Use int, matching the corresponding
+declaration in MediaPlayCtrl.h.
+---
+ src/slic3r/GUI/wxMediaCtrl2.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/slic3r/GUI/wxMediaCtrl2.h b/src/slic3r/GUI/wxMediaCtrl2.h
+index 1b510e2115f4768c9ebed68bfdb76d3098d2a7e8..f48e54274940210f807eee3a7e85bfa85fb31985 100644
+--- a/src/slic3r/GUI/wxMediaCtrl2.h
++++ b/src/slic3r/GUI/wxMediaCtrl2.h
+@@ -36,7 +36,7 @@ public:
+ 
+     int GetLastError() const { return m_error; }
+ 
+-    static constexpr wxMediaState MEDIASTATE_BUFFERING = (wxMediaState) 6;
++    static constexpr int MEDIASTATE_BUFFERING = 6;
+ 
+ protected:
+     void DoSetSize(int x, int y, int width, int height, int sizeFlags) override;

@@ -1,0 +1,48 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH] video: make the metartc WebRTC backend optional
+
+Retain FFmpeg RTSP decoding without the unpackaged metartc backend.
+---
+
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index ea65c30c9a50848a3cfbeb8d90a58ccfc410a873..563dfb81997bf0afdd34e1aef780fae47c6ab82a 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -18,10 +18,9 @@ add_subdirectory(libigl)
+ add_subdirectory(hints)
+ add_subdirectory(mcut)
+ add_subdirectory(qoi)
+-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+-    set(ENABLE_WEBRTC_VIDEO ON)
+-else()
+-    set(ENABLE_WEBRTC_VIDEO OFF)
++option(ENABLE_WEBRTC_VIDEO "Build the metartc WebRTC camera backend" OFF)
++if(ENABLE_WEBRTC_VIDEO)
++    add_definitions(-DENABLE_WEBRTC_VIDEO)
+ endif()
+ add_subdirectory(video)
+ # Adding libnest2d project for bin packing...
+diff --git a/src/video/CMakeLists.txt b/src/video/CMakeLists.txt
+index 8e3f008cc5b1eab69a0fc409b16d925a5ef0ee0e..d641c1bcb9efe33f3f3955150758dceb4c23ac51 100644
+--- a/src/video/CMakeLists.txt
++++ b/src/video/CMakeLists.txt
+@@ -21,10 +21,13 @@
+             YangRtcReceive.h
+         )
+     endif(ENABLE_WEBRTC_VIDEO)
+-    set(VIDEO_INCLUDE_DIRS
+-        ${CMAKE_PREFIX_PATH}/include/metartc/
+-        ${CMAKE_PREFIX_PATH}/include/
+-    )
++    set(VIDEO_INCLUDE_DIRS ${FFMPEG_INCLUDE_DIR})
++    if(ENABLE_WEBRTC_VIDEO)
++        list(APPEND VIDEO_INCLUDE_DIRS
++            ${CMAKE_PREFIX_PATH}/include/metartc/
++            ${CMAKE_PREFIX_PATH}/include/
++        )
++    endif()
+     add_library(webrtc_video STATIC ${VIDEO_SOURCES})
+     target_include_directories(webrtc_video
+         PUBLIC

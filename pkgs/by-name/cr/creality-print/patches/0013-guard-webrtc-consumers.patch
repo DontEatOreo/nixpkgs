@@ -1,0 +1,89 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH] gui: guard consumers of the optional WebRTC backend
+
+Retain FFmpeg RTSP decoding without the unpackaged metartc backend.
+---
+
+diff --git a/src/slic3r/GUI/HttpServer.cpp b/src/slic3r/GUI/HttpServer.cpp
+index 0559aeb87a354381684ae1401644e7d683d41023..3598dff0d6d6f5c9eb6f9c2fc0958e838007066b 100644
+--- a/src/slic3r/GUI/HttpServer.cpp
++++ b/src/slic3r/GUI/HttpServer.cpp
+@@ -5,10 +5,10 @@
+ #include "slic3r/Utils/Http.hpp"
+ #include "slic3r/Utils/NetworkAgent.hpp"
+ #include <boost/regex.hpp>
+-#if defined(__linux__) || defined(__LINUX__)
++#if (defined(__linux__) || defined(__LINUX__)) && defined(ENABLE_WEBRTC_VIDEO)
+ #include "video/WebRTCDecoder.h"
+-#include <boost/asio/steady_timer.hpp>
+ #endif
++#include <boost/asio/steady_timer.hpp>
+ 
+ #include "buildinfo.h"
+ #if ENABLE_FFMPEG
+@@ -178,7 +178,7 @@ void session::read_next_line()
+                         else
+                         {
+                             video_url = (boost::format("http://%1%:8000/call/webrtc_local") % ip).str();
+-                              #if defined(__linux__) || defined(__LINUX__)
++                              #if (defined(__linux__) || defined(__LINUX__)) && defined(ENABLE_WEBRTC_VIDEO)
+                                 WebRTCDecoder::GetInstance()->startPlay(video_url); 
+                               #endif
+                         }
+@@ -241,7 +241,7 @@ void session::sendFrame(const boost::system::error_code &ec,boost::asio::ip::tcp
+             RTSPDecoder::GetInstance()->getFrameData(copy_frame);
+             #endif
+         }else{
+-            #if defined(__linux__) || defined(__LINUX__)
++            #if (defined(__linux__) || defined(__LINUX__)) && defined(ENABLE_WEBRTC_VIDEO)
+             copy_frame = WebRTCDecoder::GetInstance()->getFrameData();
+             #endif
+         }
+diff --git a/src/slic3r/GUI/print_manage/App/PrinterMgrView.cpp b/src/slic3r/GUI/print_manage/App/PrinterMgrView.cpp
+index d250ec5b4474ef71752859b1c6750cbff44c7913..c22a3571a90d45c2789363c93409611e14fb48fe 100644
+--- a/src/slic3r/GUI/print_manage/App/PrinterMgrView.cpp
++++ b/src/slic3r/GUI/print_manage/App/PrinterMgrView.cpp
+@@ -43,7 +43,7 @@
+ #include <boost/uuid/uuid.hpp>
+ #include <boost/uuid/uuid_generators.hpp>
+ #include <boost/uuid/uuid_io.hpp>
+-#if defined(__linux__) || defined(__LINUX__)
++#if (defined(__linux__) || defined(__LINUX__)) && defined(ENABLE_WEBRTC_VIDEO)
+ #include "video/WebRTCDecoder.h"
+ #endif
+ #include <slic3r/GUI/print_manage/AppUtils.hpp>
+@@ -1433,8 +1433,8 @@ void PrinterMgrView::OnScriptMessage(wxWebViewEvent& evt)
+             }
+             else
+             {
+-                #if defined(__linux__) || defined(__LINUX__)
+-                    WebRTCDecoder::GetInstance()->startPlay(video_url); 
++                #if (defined(__linux__) || defined(__LINUX__)) && defined(ENABLE_WEBRTC_VIDEO)
++                    WebRTCDecoder::GetInstance()->startPlay(video_url);
+                 #endif
+             }
+ 
+diff --git a/src/slic3r/GUI/print_manage/App/SendToPrinter.cpp b/src/slic3r/GUI/print_manage/App/SendToPrinter.cpp
+index a86a7e70d5d36bdd607a7b4ceb2aec5cc431665a..5bc5809878e7e9c0d96b006cab293f999cada2b7 100644
+--- a/src/slic3r/GUI/print_manage/App/SendToPrinter.cpp
++++ b/src/slic3r/GUI/print_manage/App/SendToPrinter.cpp
+@@ -45,7 +45,7 @@
+ #include <nlohmann/json.hpp>
+ #include <memory>
+ #include <utility>
+-#if defined(__linux__) || defined(__LINUX__)
++#if (defined(__linux__) || defined(__LINUX__)) && defined(ENABLE_WEBRTC_VIDEO)
+ #include "video/WebRTCDecoder.h"
+ #endif
+ #include "buildinfo.h"
+@@ -528,7 +528,7 @@ void CxSentToPrinterDialog::OnScriptMessage(wxWebViewEvent& evt)
+             }
+             else
+             {
+-                #if defined(__linux__) || defined(__LINUX__)
++                #if (defined(__linux__) || defined(__LINUX__)) && defined(ENABLE_WEBRTC_VIDEO)
+                     WebRTCDecoder::GetInstance()->stopPlay();
+                 #endif
+             }

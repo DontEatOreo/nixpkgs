@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH 08/10] MacDarkMode: use the public implementation accessor
+
+The wxCocoaOutlineView implementation ivar is private and its Objective-C symbol
+is not exported by shared wxWidgets. Use the public accessor so the category can
+link against the nixpkgs library.
+---
+ src/slic3r/Utils/MacDarkMode.mm | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/slic3r/Utils/MacDarkMode.mm b/src/slic3r/Utils/MacDarkMode.mm
+index 58ff02ff5d1f93688521de220c4be609f7a9f0f6..c19473de31dfa9722204cc7fd6892365615c91e0 100644
+--- a/src/slic3r/Utils/MacDarkMode.mm
++++ b/src/slic3r/Utils/MacDarkMode.mm
+@@ -282,7 +282,7 @@ bool addObserver = false;
+     wxDataViewColumn* const col((wxDataViewColumn *)[tableColumn getColumnPointer]);
+     wxDataViewItem item2([static_cast<wxPointerObject *>(item) pointer]);
+ 
+-    wxDataViewCtrl* const dvc = implementation->GetDataViewCtrl();
++    wxDataViewCtrl* const dvc = [self implementation]->GetDataViewCtrl();
+     // Before doing anything we send an event asking if editing of this item is really wanted.
+     wxDataViewEvent event(wxEVT_DATAVIEW_ITEM_EDITING_STARTED, dvc, col, item2);
+     dvc->GetEventHandler()->ProcessEvent( event );
+@@ -294,7 +294,7 @@ bool addObserver = false;
+ 
+ - (void)synchronizedViewContentBoundsDidChange:(NSNotification *)notification
+ {
+-    wxDataViewCtrl* const dvc = implementation->GetDataViewCtrl();
++    wxDataViewCtrl* const dvc = [self implementation]->GetDataViewCtrl();
+     wxDataViewCustomRenderer * r = dvc->GetCustomRendererPtr();
+     if (r)
+         r->FinishEditing();

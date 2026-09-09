@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH 05/10] Plater: guard cleanup after failed initialization
+
+MainFrame construction can throw before the notification manager or tab panel is
+initialized. Check these pointers during destruction to avoid a second failure
+while unwinding.
+---
+ src/slic3r/GUI/Plater.cpp | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/slic3r/GUI/Plater.cpp b/src/slic3r/GUI/Plater.cpp
+index 394712ee6dc710f07d5fb9742c8ec46f0a2ea92c..e39d6b640686b7b6a3eb06a4e33f414321cccfb9 100644
+--- a/src/slic3r/GUI/Plater.cpp
++++ b/src/slic3r/GUI/Plater.cpp
+@@ -7098,8 +7098,10 @@ Plater::priv::~priv()
+         CxSent_print_dialog = nullptr;
+     }
+ 
+-    notification_manager->deactivate_loaded_hints();
+-    main_frame->m_tabpanel->Unbind(wxEVT_NOTEBOOK_PAGE_CHANGING, &priv::on_tab_selection_changing, this);
++    if (notification_manager)
++        notification_manager->deactivate_loaded_hints();
++    if (main_frame && main_frame->m_tabpanel)
++        main_frame->m_tabpanel->Unbind(wxEVT_NOTEBOOK_PAGE_CHANGING, &priv::on_tab_selection_changing, this);
+ }
+ 
+ void Plater::priv::update(unsigned int flags)

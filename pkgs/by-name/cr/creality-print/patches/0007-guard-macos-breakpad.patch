@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH 07/10] GUI_Init: honor USE_BREAKPAD on macOS
+
+The macOS Breakpad headers and handler are selected even when ENABLE_BREAKPAD is
+disabled. Guard both with USE_BREAKPAD so the source build does not require the
+bundled crash reporter.
+---
+ src/slic3r/GUI/GUI_Init.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/slic3r/GUI/GUI_Init.cpp b/src/slic3r/GUI/GUI_Init.cpp
+index 1cbdc0f454442ea25b025a4b45b28ea0b4d2e668..e248b8d29c9a3fe4bda3f04aa005c05c0ac9de97 100644
+--- a/src/slic3r/GUI/GUI_Init.cpp
++++ b/src/slic3r/GUI/GUI_Init.cpp
+@@ -22,7 +22,7 @@
+     #include <signal.h>
+     #include <unistd.h> // getpid, getppid
+ #endif // __APPLE__
+-#ifdef TARGET_OS_MAC
++#if defined(TARGET_OS_MAC) && defined(USE_BREAKPAD)
+     //#ifdef USE_BREAKPAD
+     #include "client/mac/handler/exception_handler.h"
+     //#endif
+@@ -80,7 +80,7 @@ int GUI_Run(GUI_InitParams &params)
+         GUI::GUI_App::SetInstance(gui);
+         gui->init_params = &params;
+         
+-        #ifdef TARGET_OS_MAC
++        #if defined(TARGET_OS_MAC) && defined(USE_BREAKPAD)
+             boost::filesystem::path   tempPath = boost::filesystem::path(wxFileName::GetTempDir().ToStdString());
+             BOOST_LOG_TRIVIAL(warning) << "macOS Breakpad: using tempPath=" << tempPath.string();
+             auto dmpCallBack = [](const char* dump_dir,

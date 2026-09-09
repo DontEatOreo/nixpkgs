@@ -1,0 +1,27 @@
+cmake_minimum_required(VERSION 3.15)
+project(CrealityGeometry LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+add_compile_options(-fsigned-char)
+add_compile_definitions(BOOST_LOG_DYN_LINK BOOST_ALLOW_DEPRECATED_HEADERS)
+
+find_package(Boost 1.83 REQUIRED)
+find_package(CGAL REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(cereal CONFIG REQUIRED)
+find_package(TBB REQUIRED)
+find_package(MCUT CONFIG REQUIRED)
+add_library(tbb_libs INTERFACE)
+target_link_libraries(tbb_libs INTERFACE TBB::tbb TBB::tbbmalloc)
+
+set(LIBDIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+include_directories("${LIBDIR}")
+include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
+include(version.inc)
+add_subdirectory(src/libigl)
+add_subdirectory(src/libslic3r)
+
+include(cmake/CrealityComponents.cmake)
+# The consuming build supplies libigl; register its interface with the export.
+creality_export_components(libigl)

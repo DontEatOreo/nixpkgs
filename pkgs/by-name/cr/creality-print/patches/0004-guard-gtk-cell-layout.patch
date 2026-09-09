@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH 04/10] PresetComboBox: check for GtkCellLayout before accessing
+ renderers
+
+The custom combo box widget need not implement GtkCellLayout. Avoid an invalid
+cast and GTK assertion when applying the text ellipsizing workaround.
+---
+ src/slic3r/GUI/PresetComboBoxes.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/slic3r/GUI/PresetComboBoxes.cpp b/src/slic3r/GUI/PresetComboBoxes.cpp
+index 0452936a68f63a97d1786676da6ffce4d2179b75..5466dfa7ab9ba3b95dcfac0d214051b16b828f48 100644
+--- a/src/slic3r/GUI/PresetComboBoxes.cpp
++++ b/src/slic3r/GUI/PresetComboBoxes.cpp
+@@ -216,6 +216,7 @@ void PresetComboBox::update_selection()
+ 
+ // A workaround for a set of issues related to text fitting into gtk widgets:
+ #if defined(__WXGTK20__) || defined(__WXGTK3__)
++    if (!GTK_IS_CELL_LAYOUT(m_widget)) return;
+     GList* cells = gtk_cell_layout_get_cells(GTK_CELL_LAYOUT(m_widget));
+ 
+     // 'cells' contains the GtkCellRendererPixBuf for the icon,

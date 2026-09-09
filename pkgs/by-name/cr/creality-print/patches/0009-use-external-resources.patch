@@ -1,0 +1,74 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH] cmake: allow resources to be assembled separately
+
+Skip resource copying and desktop integration when final packaging supplies
+these files. Keep the normal upstream resource installation enabled by default.
+---
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e16457f..fd5fdf7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -78,7 +78,8 @@ project(${SOLUTION_NAME})
+ message("CREALITYPRINT_VERSION=${CREALITYPRINT_VERSION}")
+ message("PROCESS_NAME=${PROCESS_NAME}")
+ 
+-set(SLIC3R_RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
++set(SLIC3R_RESOURCES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources" CACHE PATH "Application resources")
++option(SLIC3R_INSTALL_RESOURCES "Copy resources into the installation" ON)
+ file(TO_NATIVE_PATH "${SLIC3R_RESOURCES_DIR}" SLIC3R_RESOURCES_DIR_WIN)
+ 
+ if(DEFINED ENV{SLIC3R_STATIC})
+@@ -1061,16 +1062,20 @@ if (WIN32)
+     message(STATUS "CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS=${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}")
+ elseif (SLIC3R_FHS)
+     # CMAKE_INSTALL_FULL_DATAROOTDIR: read-only architecture-independent data root (share)
+-    set(SLIC3R_FHS_RESOURCES "${CMAKE_INSTALL_FULL_DATAROOTDIR}/CrealityPrint")
+-    install(DIRECTORY ${SLIC3R_RESOURCES_DIR}/ DESTINATION ${SLIC3R_FHS_RESOURCES}
+-        PATTERN "*/udev" EXCLUDE
+-    )
+-    install(FILES src/platform/unix/CrealityPrint.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
+-    foreach(SIZE 32 128 192)
+-        install(FILES ${SLIC3R_RESOURCES_DIR}/images/CrealityPrint_${SIZE}px.png
+-            DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/${SIZE}x${SIZE}/apps RENAME CrealityPrint.png
++    set(SLIC3R_FHS_RESOURCES "${CMAKE_INSTALL_FULL_DATAROOTDIR}/CrealityPrint" CACHE PATH "Installed application resources")
++    if(SLIC3R_INSTALL_RESOURCES)
++        install(DIRECTORY ${SLIC3R_RESOURCES_DIR}/ DESTINATION ${SLIC3R_FHS_RESOURCES}
++            PATTERN "*/udev" EXCLUDE
+         )
+-    endforeach()
++    endif()
++    if(SLIC3R_INSTALL_RESOURCES)
++        install(FILES src/platform/unix/CrealityPrint.desktop DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications)
++        foreach(SIZE 32 128 192)
++            install(FILES ${SLIC3R_RESOURCES_DIR}/images/CrealityPrint_${SIZE}px.png
++                DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/${SIZE}x${SIZE}/apps RENAME CrealityPrint.png
++            )
++        endforeach()
++    endif()
+ elseif (CMAKE_MACOSX_BUNDLE)
+     #install(DIRECTORY "${SLIC3R_RESOURCES_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/CrealityPrint.app/Contents/resources")
+ else ()
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index ea65c30..41acb84 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -471,14 +471,14 @@ else ()
+ 
+     message("SLIC3R_RESOURCES_DIR_Mac=${SLIC3R_RESOURCES_DIR}")
+     message("BIN_RESOURCES_DIR=${BIN_RESOURCES_DIR}")
+-    if(APPLE)
++    if(APPLE AND SLIC3R_INSTALL_RESOURCES)
+         add_custom_command(TARGET ${PROJECT_DLL} POST_BUILD
+             COMMAND ${CMAKE_COMMAND} -E rm -rf "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_DLL}>/Resources"
+             COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_DLL}>/Resources"
+             COMMAND ${CMAKE_COMMAND} -E copy_directory "${SLIC3R_RESOURCES_DIR}" "$<TARGET_BUNDLE_CONTENT_DIR:${PROJECT_DLL}>/Resources"
+             COMMENT "Copying resources to .app bundle"
+             )
+-    else()
++    elseif(SLIC3R_INSTALL_RESOURCES)
+         add_custom_command(TARGET ${PROJECT_DLL} POST_BUILD
+         COMMAND ln -sfn "${SLIC3R_RESOURCES_DIR}" "${BIN_RESOURCES_DIR}"
+         COMMENT "Symlinking the resources directory into the build tree"

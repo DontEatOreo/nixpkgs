@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH] libslic3r: import separately compiled OpenVDB adapters
+
+Reuse the template-heavy volume conversion archive during engine rebuilds.
+Keep mesh callbacks in libslic3r and resolve them at the final executable link.
+---
+
+diff --git a/src/libslic3r/CMakeLists.txt b/src/libslic3r/CMakeLists.txt
+--- a/src/libslic3r/CMakeLists.txt
++++ b/src/libslic3r/CMakeLists.txt
+@@ -37,7 +37,11 @@
+ 
+ 
+ if (TARGET openvdb_libs)
+-    set(OpenVDBUtils_SOURCES OpenVDBUtils.cpp OpenVDBUtils.hpp)
++    if(CREALITY_VOLUME_DIR)
++        creality_import_volume()
++    else()
++        set(OpenVDBUtils_SOURCES OpenVDBUtils.cpp OpenVDBUtils.hpp)
++    endif()
+ endif()
+ 
+ set(lisbslic3r_sources
+@@ -773,6 +777,9 @@
+ 
+ if (TARGET openvdb_libs)
+     target_link_libraries(libslic3r openvdb_libs)
++    if(CREALITY_VOLUME_DIR)
++        target_link_libraries(libslic3r creality_volume)
++    endif()
+ endif()
+ 
+ if(WIN32)

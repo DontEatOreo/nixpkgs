@@ -1,0 +1,45 @@
+{
+  "release": {
+    "version": "7.2.1",
+    "buildNumber": "5476",
+    "rev": "24b9395c131a9849724c5bf098cba140a207e877"
+  },
+  "components": {
+    "code": {
+      "hash": "sha256-dLHHVTh47pMRpnQmoIm3hn/P2cEblAQv60xD3GHhlfg="
+    },
+    "engine": {
+      "hash": "sha256-BEguHO4bSjGCKcIGEYlFx7vVnrw20AZu0SvlO8ExdJ0="
+    },
+    "geometry": {
+      "hash": "sha256-D+2aaS1U2KYWE9xTEbEF13x0LZlgn5Xh95UkprUq6vk="
+    },
+    "guiVendor": {
+      "version": "unstable-2026-08-04",
+      "hash": "sha256-xmG7Te8OcEhiTJAjUw7THKnhM9ZTq2EDhKfc1dv/VNc="
+    },
+    "mcut": {
+      "version": "unstable-2026-08-04",
+      "hash": "sha256-ijv27A4LW7BE/lNfUvl9DHggzsADKbRreSOncg199rM="
+    },
+    "resources": {
+      "version": "unstable-2026-08-04",
+      "hash": "sha256-qPx12GwE5ukmk7MQ0MayRE6YQW/A2N89tPfrmMtC0tY="
+    },
+    "tpms": {
+      "version": "unstable-2026-08-04",
+      "hash": "sha256-eKyYgpR8LgHi0j98WvI7XBDikuBS2U/wy7Klpe6YYmo="
+    },
+    "vendor": {
+      "version": "unstable-2026-08-04",
+      "hash": "sha256-b0GPi0gMn8Id8TVHTXbPsrT9vYL9OGXWI0gOW/raXEE="
+    },
+    "video": {
+      "version": "unstable-2026-08-04",
+      "hash": "sha256-aKw9KSqoY26FLLGep03EkawSZMYTJdklaWLKYXXWjiE="
+    },
+    "volume": {
+      "hash": "sha256-haPXfTUG++1EU+nuVsXWcxByIrTA6rY5O50a/s1mA0U="
+    }
+  }
+}

@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH 02/10] libslic3r: link the system OpenCV modules
+
+Upstream expects the monolithic opencv_world target. Nixpkgs builds separate
+OpenCV libraries; link the core and image processing modules used by libslic3r.
+---
+ src/libslic3r/CMakeLists.txt | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/src/libslic3r/CMakeLists.txt b/src/libslic3r/CMakeLists.txt
+index 1cfaded48d3638e130b15e5dda93dead9b0f6f8a..7d93e4359b3274ab541965405d8594fdd0f416c9 100644
+--- a/src/libslic3r/CMakeLists.txt
++++ b/src/libslic3r/CMakeLists.txt
+@@ -706,14 +706,10 @@ target_link_libraries(libslic3r
+     qoi
+     )
+ 
+-if(TARGET opencv_world)
+-    target_link_libraries(libslic3r opencv_world)
+-endif()
+-
+-if(TARGET opencv::opencv)
+-    target_link_libraries(libslic3r opencv::opencv)
+-endif()
+-
++target_link_libraries(libslic3r
++    opencv_core
++    opencv_imgproc
++)
+ if(TARGET nowide)
+     target_link_libraries(libslic3r nowide)
+ endif()

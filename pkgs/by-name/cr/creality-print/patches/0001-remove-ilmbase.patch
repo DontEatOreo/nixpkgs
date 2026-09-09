@@ -1,0 +1,50 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH 01/10] FindOpenVDB: remove obsolete IlmBase dependency
+
+The bundled find module still requires IlmBase::Half, which was removed from
+modern OpenEXR. Nixpkgs provides OpenVDB with its own shared-library
+dependencies, so do not require the obsolete target.
+---
+ cmake/modules/FindOpenVDB.cmake | 20 --------------------
+ 1 file changed, 20 deletions(-)
+
+diff --git a/cmake/modules/FindOpenVDB.cmake b/cmake/modules/FindOpenVDB.cmake
+index 12f6480b8815cb679552c5b9ac3397af23d3d2c7..13eeee93d781d6b622ba12d6fcd2feb1183e66bd 100644
+--- a/cmake/modules/FindOpenVDB.cmake
++++ b/cmake/modules/FindOpenVDB.cmake
+@@ -351,25 +351,6 @@ macro(just_fail msg)
+   return()
+ endmacro()
+ 
+-find_package(IlmBase QUIET)
+-if(NOT IlmBase_FOUND)
+-  pkg_check_modules(IlmBase QUIET IlmBase)
+-endif()
+-if (IlmBase_FOUND AND NOT TARGET IlmBase::Half)
+-  message(STATUS "Falling back to IlmBase found by pkg-config...")
+-
+-  find_library(IlmHalf_LIBRARY NAMES Half)
+-  if(IlmHalf_LIBRARY-NOTFOUND OR NOT IlmBase_INCLUDE_DIRS)
+-    just_fail("IlmBase::Half can not be found!")
+-  endif()
+-  
+-  add_library(IlmBase::Half UNKNOWN IMPORTED)
+-  set_target_properties(IlmBase::Half PROPERTIES
+-    IMPORTED_LOCATION "${IlmHalf_LIBRARY}"
+-    INTERFACE_INCLUDE_DIRECTORIES "${IlmBase_INCLUDE_DIRS}")
+-elseif(NOT IlmBase_FOUND)
+-  just_fail("IlmBase::Half can not be found!")
+-endif()
+ find_package(TBB ${_quiet} ${_required} COMPONENTS tbb)
+ find_package(ZLIB ${_quiet} ${_required})
+ find_package(Boost ${_quiet} ${_required} COMPONENTS iostreams system )
+@@ -475,7 +456,6 @@ endif()
+ set(_OPENVDB_VISIBLE_DEPENDENCIES
+   Boost::iostreams
+   Boost::system
+-  IlmBase::Half
+ )
+ 
+ set(_OPENVDB_DEFINITIONS)

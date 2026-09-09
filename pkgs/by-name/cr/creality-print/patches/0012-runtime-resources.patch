@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH] app: allow runtime selection of packaged resources
+
+Let the wrapper select resources on Linux and Darwin. Preserve the platform
+default when the variable is unset or empty.
+---
+
+diff --git a/src/CrealityPrint.cpp b/src/CrealityPrint.cpp
+index 48e5d37..3ca9d58 100644
+--- a/src/CrealityPrint.cpp
++++ b/src/CrealityPrint.cpp
+@@ -6080,6 +6080,12 @@ bool CLI::setup(int argc, char **argv)
+     boost::filesystem::path path_resources = boost::filesystem::canonical(path_to_binary).parent_path().parent_path() / "resources";
+ #endif
+ 
++    // Packaging can select resources without relinking the executable
++    if (const char *resources = boost::nowide::getenv("CREALITY_PRINT_RESOURCES")) {
++        if (*resources != '\0')
++            path_resources = resources;
++    }
++
+     set_resources_dir(path_resources.string());
+     set_var_dir((path_resources / "images").string());
+     set_local_dir((path_resources / "i18n").string());

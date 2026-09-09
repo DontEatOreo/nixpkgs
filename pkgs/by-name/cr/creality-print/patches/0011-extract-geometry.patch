@@ -1,0 +1,125 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: 4evy <git@evy.pink>
+Date: Thu, 1 Jan 1970 00:00:00 +0000
+Subject: [PATCH] cmake: extract the geometry target for standalone builds
+
+Keep the target definition shared by the engine and standalone geometry build.
+This patch does not depend on GUI or video changes.
+---
+
+diff --git a/src/libslic3r/CMakeLists.txt b/src/libslic3r/CMakeLists.txt
+index 7d93e4359b3274ab541965405d8594fdd0f416c9..edb356505cc2b3106a55d138daabb0aeb07de113 100644
+--- a/src/libslic3r/CMakeLists.txt
++++ b/src/libslic3r/CMakeLists.txt
+@@ -598,46 +598,7 @@ find_package(CGAL REQUIRED)
+ find_package(OpenCV REQUIRED core)
+ cmake_policy(POP)
+ 
+-set(lisbslic3r_cgal_sources    CutSurface.hpp CutSurface.cpp
+-            IntersectionPoints.hpp IntersectionPoints.cpp
+-            TryCatchSignal.hpp TryCatchSignal.cpp
+-            Triangulation.hpp Triangulation.cpp)
+-if(BUILD_CLOUD_SLICER)
+-    add_definitions(-DCLOUD_SKIP_MESHBOOLEAN)
+-else()
+-    list(APPEND lisbslic3r_cgal_sources MeshBoolean.hpp MeshBoolean.cpp)
+-endif()    
+-
+-add_library(libslic3r_cgal STATIC ${lisbslic3r_cgal_sources})
+-
+-target_include_directories(libslic3r_cgal PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+-
+-# Reset compile options of libslic3r_cgal. Despite it being linked privately, CGAL options
+-# (-frounding-math) still propagate to dependent libs which is not desired.
+-get_target_property(_cgal_tgt CGAL::CGAL ALIASED_TARGET)
+-if (NOT TARGET ${_cgal_tgt})
+-    set (_cgal_tgt CGAL::CGAL)
+-endif ()
+-get_target_property(_opts ${_cgal_tgt} INTERFACE_COMPILE_OPTIONS)
+-if (_opts)
+-    set(_opts_bad "${_opts}")
+-    set(_opts_good "${_opts}")
+-    list(FILTER _opts_bad INCLUDE REGEX frounding-math)
+-    list(FILTER _opts_good EXCLUDE REGEX frounding-math)
+-    set_target_properties(${_cgal_tgt} PROPERTIES INTERFACE_COMPILE_OPTIONS "${_opts_good}")
+-    target_compile_options(libslic3r_cgal PRIVATE "${_opts_bad}")
+-endif()
+-
+-target_link_libraries(libslic3r_cgal PRIVATE ${_cgal_tgt} libigl mcut)
+-if(TARGET cereal::cereal)
+-    target_link_libraries(libslic3r_cgal PRIVATE cereal::cereal)
+-endif()
+-
+-target_link_libraries(libslic3r_cgal PRIVATE tbb_libs)
+-
+-if (MSVC AND "${CMAKE_SIZEOF_VOID_P}" STREQUAL "4") # 32 bit MSVC workaround
+-    target_compile_definitions(libslic3r_cgal PRIVATE CGAL_DO_NOT_USE_MPZF)
+-endif ()
++include(geometry.cmake)
+ 
+ encoding_check(libslic3r)
+ 
+@@ -717,7 +678,9 @@ endif()
+ target_link_libraries(libslic3r ${_cgal_tgt})
+ 
+ if(TARGET openssl::openssl)
+-    target_link_libraries(libslic3r_cgal PRIVATE openssl::openssl)
++    if(NOT CREALITY_GEOMETRY_DIR)
++        target_link_libraries(libslic3r_cgal PRIVATE openssl::openssl)
++    endif()
+     target_link_libraries(libslic3r openssl::openssl)
+ endif()
+ 
+diff --git a/src/libslic3r/geometry.cmake b/src/libslic3r/geometry.cmake
+new file mode 100644
+index 0000000000000000000000000000000000000000..da38fa2267a30c42d247ee9184ef0ad22738db0a
+--- /dev/null
++++ b/src/libslic3r/geometry.cmake
+@@ -0,0 +1,47 @@
++set(lisbslic3r_cgal_sources    CutSurface.hpp CutSurface.cpp
++            IntersectionPoints.hpp IntersectionPoints.cpp
++            TryCatchSignal.hpp TryCatchSignal.cpp
++            Triangulation.hpp Triangulation.cpp)
++if(BUILD_CLOUD_SLICER)
++    add_definitions(-DCLOUD_SKIP_MESHBOOLEAN)
++else()
++    list(APPEND lisbslic3r_cgal_sources MeshBoolean.hpp MeshBoolean.cpp)
++endif()
++
++if(CREALITY_GEOMETRY_DIR)
++    include("${CREALITY_GEOMETRY_DIR}/lib/cmake/CrealityPrint/geometry.cmake")
++else()
++    add_library(libslic3r_cgal STATIC ${lisbslic3r_cgal_sources})
++    target_include_directories(libslic3r_cgal PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
++endif()
++
++# Reset compile options of libslic3r_cgal; despite it being linked privately, CGAL options
++# (-frounding-math) still propagate to dependent libs which is not desired
++get_target_property(_cgal_tgt CGAL::CGAL ALIASED_TARGET)
++if (NOT TARGET ${_cgal_tgt})
++    set (_cgal_tgt CGAL::CGAL)
++endif ()
++get_target_property(_opts ${_cgal_tgt} INTERFACE_COMPILE_OPTIONS)
++if (_opts)
++    set(_opts_bad "${_opts}")
++    set(_opts_good "${_opts}")
++    list(FILTER _opts_bad INCLUDE REGEX frounding-math)
++    list(FILTER _opts_good EXCLUDE REGEX frounding-math)
++    set_target_properties(${_cgal_tgt} PROPERTIES INTERFACE_COMPILE_OPTIONS "${_opts_good}")
++    if(NOT CREALITY_GEOMETRY_DIR)
++        target_compile_options(libslic3r_cgal PRIVATE "${_opts_bad}")
++    endif()
++endif()
++
++if(NOT CREALITY_GEOMETRY_DIR)
++    target_link_libraries(libslic3r_cgal PRIVATE ${_cgal_tgt} libigl mcut)
++    if(TARGET cereal::cereal)
++        target_link_libraries(libslic3r_cgal PRIVATE cereal::cereal)
++    endif()
++
++    target_link_libraries(libslic3r_cgal PRIVATE tbb_libs)
++
++    if (MSVC AND "${CMAKE_SIZEOF_VOID_P}" STREQUAL "4") # 32 bit MSVC workaround
++        target_compile_definitions(libslic3r_cgal PRIVATE CGAL_DO_NOT_USE_MPZF)
++    endif ()
++endif()
