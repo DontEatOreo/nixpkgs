@@ -5366,6 +5366,7 @@ with pkgs;
   acl = callPackage ../development/libraries/acl { };
 
   inherit (callPackages ../development/libraries/alibabacloud-oss-cpp-sdk { })
+    alibabacloud-oss-cpp-sdk_1_9
     alibabacloud-oss-cpp-sdk_1_10
     ;
 

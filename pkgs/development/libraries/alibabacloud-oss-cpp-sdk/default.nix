@@ -52,6 +52,12 @@ let
     });
 in
 {
+  # Match the dependency version pinned by Creality Print
+  alibabacloud-oss-cpp-sdk_1_9 = generic {
+    version = "1.9.2";
+    hash = "sha256-XOtOtU4H4oIgNEUBbC06VGpLEuzmPaeRRpCRIUuBL6g=";
+  };
+
   alibabacloud-oss-cpp-sdk_1_10 = generic {
     version = "1.10.1";
     hash = "sha256-dT2NsP21fx7u4DLrVk/GzpamYEzepsq78sOYEVb6JO4=";
